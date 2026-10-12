@@ -102,7 +102,11 @@ export const useGameStore = defineStore('game', () => {
     if (message.type === 'TOGGLE_OVERRIDE') host?.toggleOverride('guest', message.payload.roundIndex)
     if (message.type === 'REACTION') pushReaction(message.payload)
     if (message.type === 'LEAVE') {
-      notice.value = message.payload.reason || 'Lawan telah keluar dari permainan.'
+      const reason = message.payload.reason
+      notice.value =
+        reason === 'Page unloaded'
+          ? 'Lawan menutup halaman atau berpindah aplikasi.'
+          : reason || 'Lawan telah keluar dari permainan.'
       host?.setGuestConnected(false)
     }
   }

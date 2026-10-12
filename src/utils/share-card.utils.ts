@@ -175,7 +175,7 @@ export function renderResultCardToCanvas(summary: GameSummary, roomCode?: string
 
   ctx.fillStyle = '#8C7A75'
   ctx.font = '500 20px "DM Sans", sans-serif'
-  ctx.fillText('mengetahui tentang pasangannya', subCard1X + subCardW / 2, subCardY + 140)
+  ctx.fillText('mengetahui tentang bestie-nya', subCard1X + subCardW / 2, subCardY + 140)
 
   // Subcard 2
   ctx.fillStyle = '#FDF6FF'
@@ -196,7 +196,7 @@ export function renderResultCardToCanvas(summary: GameSummary, roomCode?: string
 
   ctx.fillStyle = '#8C7A75'
   ctx.font = '500 20px "DM Sans", sans-serif'
-  ctx.fillText('mengetahui tentang pasangannya', subCard2X + subCardW / 2, subCardY + 140)
+  ctx.fillText('mengetahui tentang bestie-nya', subCard2X + subCardW / 2, subCardY + 140)
 
   // 7. Footer
   ctx.fillStyle = '#735751'

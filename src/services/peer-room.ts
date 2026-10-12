@@ -227,7 +227,7 @@ export class GuestRoom {
     const handleUnload = () => {
       if (this.conn && this.conn.open) {
         try {
-          this.conn.send({ type: 'LEAVE', payload: { reason: 'Page unloaded' } })
+          this.conn.send({ type: 'LEAVE', payload: { reason: 'Lawan menutup halaman atau berpindah aplikasi.' } })
           this.conn.close()
         } catch {}
       }
