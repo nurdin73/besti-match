@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { Question, RoundState } from '@/types/game.types'
 import {
+  CATEGORY_LABELS,
   compatibilityTitle,
   generateRoomCode,
   isValidRoomCode,
@@ -9,6 +10,7 @@ import {
   summarizeGame,
   targetRoleFor,
 } from './game-rules.utils'
+import rawQuestions from '../../public/questions.json'
 
 const q = (id: string, category: Question['category']): Question => ({ id, category, template: `${id} {target}`, threshold: 0.7 })
 
@@ -73,5 +75,24 @@ describe('summarizeGame', () => {
   test('titles scale with the score', () => {
     expect(compatibilityTitle(95)).toContain('Soulmate')
     expect(compatibilityTitle(10)).toContain('Kenal')
+  })
+})
+
+describe('question bank integrity', () => {
+  const bank = rawQuestions as Question[]
+
+  test('contains at least 80 questions with unique ids', () => {
+    expect(bank.length).toBeGreaterThanOrEqual(80)
+    const ids = new Set(bank.map((item) => item.id))
+    expect(ids.size).toBe(bank.length)
+  })
+
+  test('every question has valid template, category, and calibrated threshold', () => {
+    for (const item of bank) {
+      expect(item.template).toContain('{target}')
+      expect(item.threshold).toBeGreaterThanOrEqual(0.6)
+      expect(item.threshold).toBeLessThanOrEqual(0.85)
+      expect(CATEGORY_LABELS[item.category]).toBeDefined()
+    }
   })
 })

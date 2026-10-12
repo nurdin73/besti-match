@@ -9,9 +9,12 @@ import type {
 
 export const CATEGORY_LABELS: Record<CategoryId, string> = {
   kocak: '😂 Lucu & Kocak',
-  romantis: '💘 Romantis',
-  deep: '🌙 Deep Talk',
   harian: '☕ Harian',
+  kantor: '💼 Dunia Kerja',
+  popkultur: '🍿 Pop Culture',
+  nostalgia: '🎒 Masa Kecil',
+  deep: '🌙 Deep Talk',
+  romantis: '💘 Romantis',
   custom: '✍️ Soal Kustom',
 }
 

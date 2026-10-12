@@ -16,7 +16,15 @@ const TIMER_OPTIONS: { value: TimerSeconds; label: string }[] = [
   { value: 45, label: '⏱️ 45 detik' },
   { value: null, label: '🐢 Santai' },
 ]
-const PRESET_CATEGORIES: CategoryId[] = ['kocak', 'romantis', 'deep', 'harian']
+const PRESET_CATEGORIES: CategoryId[] = [
+  'kocak',
+  'harian',
+  'kantor',
+  'popkultur',
+  'nostalgia',
+  'deep',
+  'romantis',
+]
 
 const draft = ref('')
 

@@ -1,6 +1,14 @@
 export type Role = 'host' | 'guest'
 
-export type CategoryId = 'kocak' | 'romantis' | 'deep' | 'harian' | 'custom'
+export type CategoryId =
+  | 'kocak'
+  | 'romantis'
+  | 'deep'
+  | 'harian'
+  | 'kantor'
+  | 'popkultur'
+  | 'nostalgia'
+  | 'custom'
 
 export interface Question {
   id: string
