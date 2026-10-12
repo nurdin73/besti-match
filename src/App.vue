@@ -6,6 +6,7 @@ import type { GamePhase } from '@/types/game.types'
 import SoundToggle from '@/components/common/SoundToggle.vue'
 import ConnectionBanner from '@/components/common/ConnectionBanner.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import logoImg from '@/assets/logo.webp'
 
 const game = useGameStore()
 const router = useRouter()
@@ -53,7 +54,12 @@ onMounted(() => game.resumeSession())
 
     <header class="relative z-10 mx-auto flex max-w-3xl items-center justify-between px-5 py-5" data-testid="app-header">
       <div class="flex items-center gap-2" data-testid="app-header-logo">
-        <span class="grid size-10 place-items-center rounded-2xl bg-tangerine text-xl text-white shadow-[0_3px_0_0_#d9502f]">💞</span>
+        <img
+          :src="logoImg"
+          alt="Bestie Match Logo"
+          class="size-10 rounded-2xl object-cover shadow-[0_3px_0_0_#d9502f]"
+          data-testid="app-logo-image"
+        />
         <span class="font-display text-xl font-bold tracking-tight">Bestie<span class="text-tangerine">Match</span></span>
       </div>
 
