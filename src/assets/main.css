@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-fun: "Fredoka", ui-rounded, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-cream: #faf8f5;
+  --color-peach: #fed7aa;
+  --color-tangerine: #ff6b4a;
+  --color-lavender: #8b5cf6;
+  --color-bubblegum: #ec4899;
+  --color-match: #10b981;
+  --color-miss: #f43f5e;
+  --color-ink: #1e1b18;
+  --color-line: #ebe5df;
+
+  --animate-pop-in: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-flip-in: flip-in 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  --animate-wiggle: wiggle 0.5s ease-in-out;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.85) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes flip-in {
+    from { opacity: 0; transform: perspective(800px) rotateY(-90deg); }
+    to { opacity: 1; transform: perspective(800px) rotateY(0); }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-4deg); }
+    75% { transform: rotate(4deg); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-14px) rotate(6deg); }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-display font-bold
+    transition duration-150 ease-out active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl border border-line bg-white p-6 shadow-[0_8px_30px_-12px_rgb(255_107_74/0.18)];
+  }
+  .btn-primary {
+    @apply btn bg-tangerine text-white shadow-[0_4px_0_0_#d9502f] hover:-translate-y-0.5 hover:brightness-105
+      active:shadow-none;
+  }
+  .btn-secondary {
+    @apply btn bg-lavender text-white shadow-[0_4px_0_0_#6d3fd9] hover:-translate-y-0.5 active:shadow-none;
+  }
+  .btn-ghost {
+    @apply btn border-2 border-line bg-white text-ink hover:border-tangerine hover:text-tangerine;
+  }
+  .input {
+    @apply w-full rounded-2xl border-2 border-line bg-cream px-4 py-3 text-ink outline-none transition
+      placeholder:text-stone-400 focus:border-tangerine focus:bg-white;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 font-fun text-sm font-semibold;
+  }
+}

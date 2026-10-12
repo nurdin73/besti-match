@@ -1,0 +1,31 @@
+[
+  { "id": "k01", "category": "kocak", "template": "Kalau {target} jadi hewan, kira-kira jadi hewan apa?", "threshold": 0.68 },
+  { "id": "k02", "category": "kocak", "template": "Apa hal paling memalukan yang pernah dialami {target}?", "threshold": 0.62 },
+  { "id": "k03", "category": "kocak", "template": "Lagu apa yang paling sering dinyanyikan {target} di kamar mandi?", "threshold": 0.7 },
+  { "id": "k04", "category": "kocak", "template": "Kalau {target} punya kekuatan super, maunya kekuatan apa?", "threshold": 0.68 },
+  { "id": "k05", "category": "kocak", "template": "Apa alasan klasik {target} kalau telat datang?", "threshold": 0.62 },
+  { "id": "k06", "category": "kocak", "template": "Apa makanan aneh yang diam-diam disukai {target}?", "threshold": 0.7 },
+  { "id": "k07", "category": "kocak", "template": "Kalau {target} jadi artis, cocoknya jadi artis apa?", "threshold": 0.66 },
+
+  { "id": "r01", "category": "romantis", "template": "Apa bahasa cinta (love language) utama {target}?", "threshold": 0.7 },
+  { "id": "r02", "category": "romantis", "template": "Kencan impian {target} itu seperti apa?", "threshold": 0.62 },
+  { "id": "r03", "category": "romantis", "template": "Hadiah apa yang paling bikin {target} senang?", "threshold": 0.66 },
+  { "id": "r04", "category": "romantis", "template": "Lagu apa yang paling bikin {target} baper?", "threshold": 0.7 },
+  { "id": "r05", "category": "romantis", "template": "Apa hal kecil yang bikin {target} langsung luluh?", "threshold": 0.62 },
+  { "id": "r06", "category": "romantis", "template": "Tipe ideal {target} seperti apa?", "threshold": 0.64 },
+
+  { "id": "d01", "category": "deep", "template": "Apa ketakutan terbesar {target}?", "threshold": 0.66 },
+  { "id": "d02", "category": "deep", "template": "Apa mimpi terbesar {target} dalam hidup?", "threshold": 0.62 },
+  { "id": "d03", "category": "deep", "template": "Apa hal yang paling mudah membuat {target} kesal?", "threshold": 0.66 },
+  { "id": "d04", "category": "deep", "template": "Kalau lagi sedih, apa yang biasanya dilakukan {target}?", "threshold": 0.62 },
+  { "id": "d05", "category": "deep", "template": "Siapa orang yang paling berpengaruh dalam hidup {target}?", "threshold": 0.7 },
+  { "id": "d06", "category": "deep", "template": "Apa hal yang paling disyukuri {target} saat ini?", "threshold": 0.62 },
+
+  { "id": "h01", "category": "harian", "template": "Apa buah favorit {target}?", "threshold": 0.75 },
+  { "id": "h02", "category": "harian", "template": "Minuman apa yang paling sering dipesan {target}?", "threshold": 0.72 },
+  { "id": "h03", "category": "harian", "template": "Apa kebiasaan buruk {target} saat santai?", "threshold": 0.66 },
+  { "id": "h04", "category": "harian", "template": "Kalau diajak liburan, kota mana yang ingin dikunjungi {target}?", "threshold": 0.72 },
+  { "id": "h05", "category": "harian", "template": "Aplikasi apa yang paling sering dibuka {target}?", "threshold": 0.75 },
+  { "id": "h06", "category": "harian", "template": "Makanan apa yang paling sering dicari {target} tengah malam?", "threshold": 0.7 },
+  { "id": "h07", "category": "harian", "template": "Warna favorit {target} apa?", "threshold": 0.78 }
+]
