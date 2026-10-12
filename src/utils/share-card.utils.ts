@@ -205,11 +205,56 @@ export function renderResultCardToCanvas(summary: GameSummary, roomCode?: string
   const footerText = roomCode ? `Room #${roomCode} · ${dateStr}` : dateStr
   ctx.fillText(footerText, 540, 1170)
 
+  const siteHost = typeof window !== 'undefined' && window.location.host ? window.location.host : 'bestie-match'
   ctx.fillStyle = '#A8928B'
   ctx.font = '500 20px "DM Sans", sans-serif'
-  ctx.fillText('Buktikan seberapa kenal kamu dengan bestie di BestieMatch', 540, 1220)
+  ctx.fillText(`Mainkan di: ${siteHost}`, 540, 1220)
 
   return canvas
+}
+
+export function formatShareText(summary: GameSummary, shareUrl = ''): string {
+  const p1 = summary.players[0]?.name || 'Player 1'
+  const p2 = summary.players[1]?.name || 'Player 2'
+  const lines = [
+    `✨ Hasil Tes Kekompakan ${p1} & ${p2} di BestieMatch! ✨`,
+    `Tingkat Kecocokan: ${summary.compatibility}% — ${summary.title}`,
+    `Cocok di ${summary.matches} dari ${summary.totalRounds} pertanyaan.`,
+  ]
+  if (shareUrl) {
+    lines.push('', `Coba cocokin seberapa kenal kamu sama bestie-mu di sini:`, shareUrl)
+  }
+  return lines.join('\n')
+}
+
+export async function copyShareTextToClipboard(summary: GameSummary, shareUrl = ''): Promise<boolean> {
+  const text = formatShareText(summary, shareUrl)
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      // Fallback
+    }
+  }
+
+  // Fallback using textarea execCommand
+  if (typeof document !== 'undefined') {
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      const success = document.execCommand('copy')
+      document.body.removeChild(textarea)
+      return success
+    } catch {
+      return false
+    }
+  }
+  return false
 }
 
 export async function exportResultCardBlob(summary: GameSummary, roomCode?: string): Promise<Blob> {
@@ -237,15 +282,21 @@ export async function shareResultCard(
   blob: Blob,
   title = 'Hasil BestieMatch',
   text = 'Lihat seberapa cocok kita di BestieMatch!',
+  url?: string,
 ): Promise<boolean> {
   const file = new File([blob], 'bestie-match-result.png', { type: 'image/png' })
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  const shareData: ShareData = {
+    title,
+    text: url ? `${text}\n\nMainkan di: ${url}` : text,
+    files: [file],
+  }
+  if (url) {
+    shareData.url = url
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare(shareData)) {
     try {
-      await navigator.share({
-        title,
-        text,
-        files: [file],
-      })
+      await navigator.share(shareData)
       return true
     } catch {
       return false

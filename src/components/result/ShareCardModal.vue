@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { GameSummary } from '@/types/game.types'
-import { downloadBlob, exportResultCardBlob, shareResultCard } from '@/utils/share-card.utils'
+import { copyShareTextToClipboard, downloadBlob, exportResultCardBlob, shareResultCard } from '@/utils/share-card.utils'
 
 const props = defineProps<{
   open: boolean
@@ -18,6 +18,11 @@ const cachedBlob = ref<Blob | null>(null)
 const isGenerating = ref(false)
 const isSharing = ref(false)
 const shareSuccessNotice = ref<string | null>(null)
+
+const shareUrl = computed(() => {
+  if (typeof window === 'undefined') return ''
+  return window.location.origin
+})
 
 const canNativeShare = computed(() => {
   return typeof navigator !== 'undefined' && 'canShare' in navigator
@@ -58,6 +63,16 @@ function handleDownload(): void {
   }, 3000)
 }
 
+async function handleCopyText(): Promise<void> {
+  const copied = await copyShareTextToClipboard(props.summary, shareUrl.value)
+  if (copied) {
+    shareSuccessNotice.value = 'Teks & link berhasil disalin ke clipboard!'
+    setTimeout(() => {
+      shareSuccessNotice.value = null
+    }, 3000)
+  }
+}
+
 async function handleShare(): Promise<void> {
   if (!cachedBlob.value) return
   isSharing.value = true
@@ -66,10 +81,16 @@ async function handleShare(): Promise<void> {
       cachedBlob.value,
       `Hasil BestieMatch: ${props.summary.title}`,
       `Tingkat kecocokan kami ${props.summary.compatibility}% (${props.summary.matches}/${props.summary.totalRounds} cocok)!`,
+      shareUrl.value,
     )
     if (!shared) {
       // Fallback to download if user cancelled or share failed
       handleDownload()
+    } else {
+      shareSuccessNotice.value = 'Berhasil dibagikan!'
+      setTimeout(() => {
+        shareSuccessNotice.value = null
+      }, 3000)
     }
   } finally {
     isSharing.value = false
@@ -126,7 +147,7 @@ function handleClose(): void {
           <img
             :src="previewUrl"
             alt="Pratinjau Kartu Hasil BestieMatch"
-            class="max-h-[52vh] w-auto rounded-xl object-contain shadow-md"
+            class="max-h-[50vh] w-auto rounded-xl object-contain shadow-md"
             data-testid="share-card-preview-image"
           />
         </div>
@@ -139,26 +160,38 @@ function handleClose(): void {
           ✨ {{ shareSuccessNotice }}
         </p>
 
-        <div class="flex w-full flex-col gap-2 pt-1 sm:flex-row">
-          <button
-            type="button"
-            class="btn-primary flex-1 py-3 text-base"
-            :disabled="isGenerating"
-            data-testid="share-card-download-button"
-            @click="handleDownload"
-          >
-            📥 Unduh Gambar
-          </button>
+        <div class="flex w-full flex-col gap-2 pt-1">
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="btn-primary flex-1 py-3 text-base"
+              :disabled="isGenerating"
+              data-testid="share-card-download-button"
+              @click="handleDownload"
+            >
+              📥 Unduh Gambar
+            </button>
+
+            <button
+              v-if="canNativeShare"
+              type="button"
+              class="btn-ghost flex-1 border-2 border-lavender py-3 text-base text-lavender hover:bg-lavender/10"
+              :disabled="isGenerating || isSharing"
+              data-testid="share-card-share-button"
+              @click="handleShare"
+            >
+              📱 Bagikan
+            </button>
+          </div>
 
           <button
-            v-if="canNativeShare"
             type="button"
-            class="btn-ghost flex-1 border-2 border-lavender py-3 text-base text-lavender hover:bg-lavender/10"
-            :disabled="isGenerating || isSharing"
-            data-testid="share-card-share-button"
-            @click="handleShare"
+            class="btn-ghost flex items-center justify-center gap-1.5 w-full py-2.5 font-fun text-sm font-semibold border-2 border-line hover:border-tangerine hover:text-tangerine transition"
+            data-testid="share-card-copy-button"
+            @click="handleCopyText"
           >
-            📱 Bagikan
+            <span>📋</span>
+            <span>Salin Teks Ringkasan & Tautan</span>
           </button>
         </div>
       </div>

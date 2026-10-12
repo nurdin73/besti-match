@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import type { GameSummary } from '@/types/game.types'
-import { downloadBlob, renderResultCardToCanvas } from './share-card.utils'
+import { copyShareTextToClipboard, downloadBlob, formatShareText, renderResultCardToCanvas } from './share-card.utils'
 
 const mockSummary: GameSummary = {
   compatibility: 80,
@@ -103,5 +103,31 @@ describe('share-card.utils', () => {
     expect(appended).toBe(true)
     expect(removed).toBe(true)
     expect(fakeAnchor.download).toBe('custom-result.png')
+  })
+
+  it('formatShareText formats text with player names, score, and link', () => {
+    const text = formatShareText(mockSummary, 'https://bestie-match.web.app')
+    expect(text).toContain('Aldi')
+    expect(text).toContain('Budi')
+    expect(text).toContain('80%')
+    expect(text).toContain('Bestie Level Dewa ✨')
+    expect(text).toContain('https://bestie-match.web.app')
+  })
+
+  it('copyShareTextToClipboard writes text via navigator.clipboard', async () => {
+    let written = ''
+    // @ts-expect-error test navigator mock
+    globalThis.navigator = {
+      clipboard: {
+        writeText: async (t: string) => {
+          written = t
+        },
+      },
+    }
+
+    const success = await copyShareTextToClipboard(mockSummary, 'https://bestie-match.web.app')
+    expect(success).toBe(true)
+    expect(written).toContain('Aldi')
+    expect(written).toContain('https://bestie-match.web.app')
   })
 })
