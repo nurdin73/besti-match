@@ -24,7 +24,7 @@ const modelStore = useAiModelStore()
       <div class="flex-1">
         <div class="flex items-center justify-between gap-2">
           <h3 class="font-display font-bold text-ink" data-testid="model-download-title">
-            Mengunduh Model AI Multilingual (~118 MB)
+            Menyiapkan Otak AI Pintar...
           </h3>
           <span
             class="font-fun text-sm font-bold text-lavender"
@@ -35,7 +35,7 @@ const modelStore = useAiModelStore()
         </div>
 
         <p class="mt-1 text-xs text-stone-600" data-testid="model-download-description">
-          Diunduh <strong>1x saja</strong> dan disimpan di cache browser untuk mencocokkan kata multi-bahasa (ID/EN) & sinonim secara lokal tanpa server.
+          Cuma diunduh <strong>1x saja</strong> di browser ini biar AI bisa mendeteksi kemiripan jawaban &amp; sinonim (ID/EN) otomatis. Sesi berikutnya langsung ngebut!
         </p>
 
         <!-- Progress Bar -->
@@ -52,7 +52,7 @@ const modelStore = useAiModelStore()
             {{ modelStore.formattedLoaded }} MB / ~{{ modelStore.formattedTotal }} MB
           </span>
           <span v-if="props.isHost" class="italic text-stone-400">
-            Game tetap bisa dimulai kapan saja (fallback ke pencocokan kata dasar)
+            Mau langsung main? Bisa kok! Game tetap jalan dengan pencocokan kata biasa.
           </span>
         </div>
       </div>
@@ -66,7 +66,7 @@ const modelStore = useAiModelStore()
   >
     <div class="flex items-center gap-2">
       <span class="text-sm">✨</span>
-      <span><strong>AI Multilingual Aktif:</strong> Pencocokan kata ID/EN siap digunakan offline.</span>
+      <span><strong>Otak AI Siap:</strong> Deteksi jawaban pintar aktif &amp; siap main!</span>
     </div>
     <span class="rounded-full bg-emerald-100 px-2 py-0.5 font-bold text-emerald-700">Tersimpan di Cache</span>
   </div>

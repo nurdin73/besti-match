@@ -83,11 +83,11 @@ export const useAiModelStore = defineStore('aiModel', () => {
         progress.value = 100
       } else {
         status.value = 'error'
-        error.value = 'Gagal memuat model. Game akan menggunakan pencocokan kata dasar.'
+        error.value = 'Otak AI belum berhasil dimuat. Game tetap bisa jalan pakai pencocokan kata biasa.'
       }
     } catch (err: unknown) {
       status.value = 'error'
-      error.value = err instanceof Error ? err.message : 'Terjadi kendala saat mengunduh model AI.'
+      error.value = err instanceof Error ? err.message : 'Terjadi kendala saat menyiapkan AI. Game tetap bisa jalan pakai kata biasa.'
     }
   }
 
