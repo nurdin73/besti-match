@@ -1,13 +1,17 @@
 import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import type { GameState, Question, Role } from '@/types/game.types'
-import type { ConnectionStatus, GuestToHostMessage, HostToGuestMessage, SettingsPatch } from '@/types/p2p.types'
+import type { ConnectionStatus, GuestToHostMessage, HostToGuestMessage, ReactionPayload, SettingsPatch } from '@/types/p2p.types'
 import { HostSession } from '@/game/host-session'
 import { evaluateAnswers } from '@/game/evaluate-answers'
 import { generateRoomCode, summarizeGame } from '@/game/game-rules.utils'
 import { GuestRoom, HostRoom } from '@/services/peer-room'
 import { useAiModelStore } from './aiModelStore'
 import { sessionPersistence } from './session-persistence'
+
+export interface ActiveReaction extends ReactionPayload {
+  createdAt: number
+}
 
 const REJECTION_TEXT = {
   ROOM_FULL: 'Ruangan sudah penuh. Game ini cuma buat berdua 😅',
@@ -26,6 +30,7 @@ export const useGameStore = defineStore('game', () => {
   /** hostClock - localClock, used to render the host's deadline on the guest. */
   const clockOffset = ref(0)
   const bank = shallowRef<Question[]>([])
+  const activeReactions = ref<ActiveReaction[]>([])
 
   let host: HostSession | null = null
   let hostRoom: HostRoom | null = null
@@ -66,9 +71,36 @@ export const useGameStore = defineStore('game', () => {
     void loadBank()
   }
 
+  function pushReaction(payload: ReactionPayload): void {
+    activeReactions.value = [...activeReactions.value, { ...payload, createdAt: Date.now() }]
+  }
+
+  function removeReaction(id: string): void {
+    activeReactions.value = activeReactions.value.filter((r) => r.id !== id)
+  }
+
+  function sendReaction(emoji: string): void {
+    if (!role.value || !state.value) return
+    const myRole = role.value
+    const myName = state.value.players[myRole]?.name ?? 'Anonymous'
+    const payload: ReactionPayload = {
+      id: crypto.randomUUID(),
+      emoji,
+      senderRole: myRole,
+      senderName: myName,
+    }
+    pushReaction(payload)
+    if (myRole === 'host') {
+      hostRoom?.send({ type: 'REACTION', payload })
+    } else {
+      guestRoom?.send({ type: 'REACTION', payload })
+    }
+  }
+
   function handleGuestIntent(message: Exclude<GuestToHostMessage, { type: 'JOIN' }>): void {
     if (message.type === 'SUBMIT_ANSWER') host?.submitAnswer('guest', message.payload.roundIndex, message.payload.answer)
     if (message.type === 'TOGGLE_OVERRIDE') host?.toggleOverride('guest', message.payload.roundIndex)
+    if (message.type === 'REACTION') pushReaction(message.payload)
     if (message.type === 'LEAVE') {
       notice.value = message.payload.reason || 'Lawan telah keluar dari permainan.'
       host?.setGuestConnected(false)
@@ -79,6 +111,10 @@ export const useGameStore = defineStore('game', () => {
     if (message.type === 'STATE') {
       clockOffset.value = message.payload.hostNow - Date.now()
       state.value = message.payload.state
+      return
+    }
+    if (message.type === 'REACTION') {
+      pushReaction(message.payload)
       return
     }
     if (message.type === 'GAME_ABORTED') {
@@ -149,6 +185,7 @@ export const useGameStore = defineStore('game', () => {
     role.value = null
     state.value = null
     status.value = 'idle'
+    activeReactions.value = []
     sessionPersistence.clear()
   }
 
@@ -161,10 +198,12 @@ export const useGameStore = defineStore('game', () => {
   const roundIndex = () => state.value?.round?.index ?? -1
 
   return {
-    role, state, status, notice, isHost, summary, localDeadline, canStart, bank,
+    role, state, status, notice, isHost, summary, localDeadline, canStart, bank, activeReactions,
     createRoom, joinRoom, resumeSession, leave, abortGame, retryConnection,
     submitAnswer: (answer: string) => sendIntent({ type: 'SUBMIT_ANSWER', payload: { roundIndex: roundIndex(), answer } }),
     toggleOverride: () => sendIntent({ type: 'TOGGLE_OVERRIDE', payload: { roundIndex: roundIndex() } }),
+    sendReaction,
+    removeReaction,
     updateSettings: (patch: SettingsPatch) => host?.updateSettings(patch),
     addCustomQuestion: (text: string) => host?.addCustomQuestion(text),
     removeCustomQuestion: (id: string) => host?.removeCustomQuestion(id),

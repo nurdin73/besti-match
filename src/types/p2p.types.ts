@@ -1,4 +1,11 @@
-import type { GameSettings, GameState } from './game.types'
+import type { GameSettings, GameState, Role } from './game.types'
+
+export interface ReactionPayload {
+  id: string
+  emoji: string
+  senderRole: Role
+  senderName: string
+}
 
 /**
  * Wire protocol. The host is authoritative and pushes full `STATE` snapshots
@@ -9,12 +16,14 @@ export type GuestToHostMessage =
   | { type: 'JOIN'; payload: { name: string; token: string } }
   | { type: 'SUBMIT_ANSWER'; payload: { roundIndex: number; answer: string } }
   | { type: 'TOGGLE_OVERRIDE'; payload: { roundIndex: number } }
+  | { type: 'REACTION'; payload: ReactionPayload }
   | { type: 'LEAVE'; payload: { reason?: string } }
 
 export type HostToGuestMessage =
   | { type: 'STATE'; payload: { state: GameState; hostNow: number } }
   | { type: 'REJECTED'; payload: { reason: 'ROOM_FULL' | 'GAME_IN_PROGRESS' } }
   | { type: 'GAME_ABORTED'; payload: { reason?: string } }
+  | { type: 'REACTION'; payload: ReactionPayload }
 
 export type P2PMessage = GuestToHostMessage | HostToGuestMessage
 

@@ -7,6 +7,8 @@ import TimerBar from '@/components/common/TimerBar.vue'
 import QuestionPrompt from '@/components/game/QuestionPrompt.vue'
 import AnswerInputCard from '@/components/game/AnswerInputCard.vue'
 import RoundRevealCard from '@/components/game/RoundRevealCard.vue'
+import LiveReactionOverlay from '@/components/game/LiveReactionOverlay.vue'
+import LiveReactionPicker from '@/components/game/LiveReactionPicker.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const game = useGameStore()
@@ -45,6 +47,7 @@ watch(() => game.state?.phase, (phase) => {
 
 <template>
   <section v-if="round && game.state" class="flex flex-col gap-5" data-testid="game-view">
+    <LiveReactionOverlay />
     <QuestionPrompt :round="round" :total-rounds="totalRounds" :i-am-target="iAmTarget" :target-name="targetName" />
 
     <template v-if="game.state.phase === 'answering'">
@@ -84,7 +87,14 @@ watch(() => game.state?.phase, (phase) => {
       @next="game.nextRound()"
     />
 
-    <div class="flex justify-center pt-2">
+    <div
+      v-if="game.state.phase === 'answering' || game.state.phase === 'reveal'"
+      class="flex justify-center pt-1"
+    >
+      <LiveReactionPicker />
+    </div>
+
+    <div class="flex justify-center pt-1">
       <button
         type="button"
         class="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white/70 px-4 py-2 font-fun text-xs font-semibold text-stone-500 transition hover:border-miss/40 hover:bg-white hover:text-miss active:translate-y-0.5"
