@@ -12,7 +12,7 @@ const isProblematic = computed(() => {
 })
 
 const message = computed(() => {
-  if (game.status === 'error') return 'Koneksi gagal tersambung.'
+  if (game.status === 'error') return 'Koneksi gagal tersambung. Pastikan kode ruangan benar atau host masih aktif.'
   if (game.status === 'reconnecting') return 'Koneksi terputus, mencoba menyambung ulang…'
   const guest = game.state?.players.guest
   if (game.isHost && game.state?.phase !== 'lobby' && guest && !guest.connected) {

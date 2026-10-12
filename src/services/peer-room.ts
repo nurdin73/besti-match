@@ -6,9 +6,9 @@ import type {
 } from '@/types/p2p.types'
 
 const PEER_ID_PREFIX = 'bestie-match-v1-'
-const RETRY_DELAY_MS = 2500
-const MAX_RETRIES = 25
-const CONNECT_TIMEOUT_MS = 6000
+const RETRY_DELAY_MS = 2000
+const MAX_RETRIES = 5
+const CONNECT_TIMEOUT_MS = 4500
 
 export const peerIdFor = (roomCode: string) => `${PEER_ID_PREFIX}${roomCode}`
 
@@ -245,9 +245,28 @@ export class GuestRoom {
     }
   }
 
+  private cleanupCurrentConnection(): void {
+    if (this.connectTimeoutTimer) {
+      clearTimeout(this.connectTimeoutTimer)
+      this.connectTimeoutTimer = null
+    }
+    if (this.conn) {
+      const conn = this.conn
+      this.conn = null
+      try {
+        conn.off('open')
+        conn.off('data')
+        conn.off('close')
+        conn.off('error')
+        conn.close()
+      } catch {}
+    }
+  }
+
   start(): void {
     if (this.destroyed) return
     this.clearAllTimers()
+    this.cleanupCurrentConnection()
     this.handlers.onStatus(this.retries ? 'reconnecting' : 'connecting')
 
     try {
@@ -263,17 +282,20 @@ export class GuestRoom {
 
     peer.on('disconnected', () => {
       if (!this.destroyed && !this.stopped && peer && !peer.destroyed) {
-        try {
-          peer.reconnect()
-        } catch {
-          this.scheduleRetry()
-        }
+        this.scheduleRetry()
       }
     })
 
     peer.on('error', (error) => {
       if (this.destroyed || this.stopped) return
-      if (error.type === 'peer-unavailable' || error.type === 'network' || error.type === 'server-error' || error.type === 'socket-error' || error.type === 'socket-closed') {
+      if (
+        error.type === 'peer-unavailable' ||
+        error.type === 'network' ||
+        error.type === 'server-error' ||
+        error.type === 'socket-error' ||
+        error.type === 'socket-closed' ||
+        error.type === 'disconnected'
+      ) {
         this.scheduleRetry()
       } else {
         this.handlers.onStatus('error')
@@ -284,6 +306,8 @@ export class GuestRoom {
   reconnect(): void {
     this.retries = 0
     this.stopped = false
+    this.clearAllTimers()
+    this.cleanupCurrentConnection()
     this.start()
   }
 
@@ -298,36 +322,34 @@ export class GuestRoom {
   destroy(): void {
     this.destroyed = true
     this.clearAllTimers()
+    this.cleanupCurrentConnection()
     if (this.unloadCleanup) {
       this.unloadCleanup()
       this.unloadCleanup = null
     }
-    if (this.conn) {
-      try { this.conn.close() } catch {}
-      this.conn = null
-    }
     if (this.peer) {
-      try { this.peer.destroy() } catch {}
+      try {
+        this.peer.destroy()
+      } catch {}
       this.peer = null
     }
   }
 
   private connect(): void {
-    if (this.destroyed || this.stopped || !this.peer || this.peer.destroyed) return
-
-    // Clean up any pending connection before making a new one
-    if (this.conn) {
-      try { this.conn.close() } catch {}
-      this.conn = null
+    if (this.destroyed || this.stopped) return
+    if (!this.peer || this.peer.destroyed || !this.peer.open || this.peer.disconnected) {
+      this.start()
+      return
     }
+
+    this.cleanupCurrentConnection()
 
     const conn = this.peer.connect(peerIdFor(this.roomCode), { reliable: true })
     this.conn = conn
 
-    // Fallback timer if ICE connection hangs indefinitely
     this.connectTimeoutTimer = setTimeout(() => {
       if (!conn.open && !this.destroyed && !this.stopped) {
-        try { conn.close() } catch {}
+        this.cleanupCurrentConnection()
         this.scheduleRetry()
       }
     }, CONNECT_TIMEOUT_MS)
@@ -349,20 +371,21 @@ export class GuestRoom {
       if (message.type === 'REJECTED') {
         this.stopped = true
         this.clearAllTimers()
+        this.cleanupCurrentConnection()
       }
       this.handlers.onMessage(message)
     })
 
     conn.on('close', () => {
       if (conn === this.conn) {
-        this.conn = null
+        this.cleanupCurrentConnection()
         this.scheduleRetry()
       }
     })
 
     conn.on('error', () => {
       if (conn === this.conn) {
-        this.conn = null
+        this.cleanupCurrentConnection()
         this.scheduleRetry()
       }
     })
@@ -371,6 +394,8 @@ export class GuestRoom {
   private scheduleRetry(): void {
     if (this.destroyed || this.stopped || this.retryTimer) return
     if (this.retries >= MAX_RETRIES) {
+      this.clearAllTimers()
+      this.cleanupCurrentConnection()
       this.handlers.onStatus('error')
       return
     }
@@ -378,7 +403,11 @@ export class GuestRoom {
     this.handlers.onStatus('reconnecting')
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null
-      this.connect()
+      if (!this.peer || this.peer.destroyed || !this.peer.open || this.peer.disconnected) {
+        this.start()
+      } else {
+        this.connect()
+      }
     }, RETRY_DELAY_MS)
   }
 
