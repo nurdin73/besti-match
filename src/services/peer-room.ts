@@ -78,11 +78,13 @@ export class HostRoom {
     peer.on('connection', (conn) => this.acceptConnection(conn))
 
     peer.on('disconnected', () => {
-      if (!this.destroyed && peer && !peer.destroyed) {
-        this.handlers.onStatus('reconnecting')
-        try {
-          peer.reconnect()
-        } catch {
+      if (this.destroyed || !peer || peer.destroyed) return
+      // If we already have a working guest connection, keep the game alive
+      // and silently reconnect to the broker in the background.
+      try {
+        peer.reconnect()
+      } catch {
+        if (!this.guest) {
           this.scheduleRestart()
         }
       }
@@ -90,6 +92,10 @@ export class HostRoom {
 
     peer.on('error', (error) => {
       if (this.destroyed) return
+      // If we have an active guest, ignore transient broker socket drops
+      if (this.guest && (error.type === 'disconnected' || error.type === 'socket-closed')) {
+        return
+      }
       // After a refresh the signaling server may still hold our old ID for a few seconds.
       if (error.type === 'unavailable-id') {
         if (this.retries < MAX_RETRIES) {
@@ -101,21 +107,25 @@ export class HostRoom {
       }
 
       if (error.type === 'network' || error.type === 'server-error' || error.type === 'socket-error' || error.type === 'socket-closed') {
-        this.scheduleRestart()
-        return
+        if (!this.guest) {
+          this.scheduleRestart()
+          return
+        }
       }
 
-      this.handlers.onStatus('error')
+      if (!this.guest) {
+        this.handlers.onStatus('error')
+      }
     })
   }
 
   private scheduleRestart(): void {
-    if (this.destroyed || this.retryTimer) return
+    if (this.destroyed || this.retryTimer || this.guest) return
     this.retries++
     this.handlers.onStatus('reconnecting')
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null
-      if (!this.destroyed) this.start()
+      if (!this.destroyed && !this.guest) this.start()
     }, RETRY_DELAY_MS)
   }
 
@@ -132,7 +142,7 @@ export class HostRoom {
   }
 
   send(message: HostToGuestMessage): void {
-    if (this.guest?.open) {
+    if (this.guest) {
       try {
         void this.guest.send(message)
       } catch {
@@ -281,13 +291,24 @@ export class GuestRoom {
     peer.on('open', () => this.connect())
 
     peer.on('disconnected', () => {
-      if (!this.destroyed && !this.stopped && peer && !peer.destroyed) {
-        this.scheduleRetry()
+      if (this.destroyed || this.stopped || !peer || peer.destroyed) return
+      // If we are already connected to the host via DataConnection,
+      // DO NOT tear down or retry! The WebRTC game connection is alive and working.
+      if (this.conn?.open) {
+        try {
+          peer.reconnect()
+        } catch {}
+        return
       }
+      this.scheduleRetry()
     })
 
     peer.on('error', (error) => {
       if (this.destroyed || this.stopped) return
+      // If already connected to host, broker signaling hiccups must not kill the game
+      if (this.conn?.open && (error.type === 'disconnected' || error.type === 'socket-closed')) {
+        return
+      }
       if (
         error.type === 'peer-unavailable' ||
         error.type === 'network' ||
@@ -312,7 +333,7 @@ export class GuestRoom {
   }
 
   send(message: GuestToHostMessage): void {
-    if (this.conn?.open) {
+    if (this.conn) {
       try {
         void this.conn.send(message)
       } catch {}
@@ -355,10 +376,7 @@ export class GuestRoom {
     }, CONNECT_TIMEOUT_MS)
 
     conn.on('open', () => {
-      if (this.connectTimeoutTimer) {
-        clearTimeout(this.connectTimeoutTimer)
-        this.connectTimeoutTimer = null
-      }
+      this.clearAllTimers()
       this.retries = 0
       this.handlers.onStatus('open')
       try {
@@ -392,7 +410,7 @@ export class GuestRoom {
   }
 
   private scheduleRetry(): void {
-    if (this.destroyed || this.stopped || this.retryTimer) return
+    if (this.destroyed || this.stopped || this.retryTimer || this.conn?.open) return
     if (this.retries >= MAX_RETRIES) {
       this.clearAllTimers()
       this.cleanupCurrentConnection()
@@ -403,6 +421,7 @@ export class GuestRoom {
     this.handlers.onStatus('reconnecting')
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null
+      if (this.conn?.open) return
       if (!this.peer || this.peer.destroyed || !this.peer.open || this.peer.disconnected) {
         this.start()
       } else {

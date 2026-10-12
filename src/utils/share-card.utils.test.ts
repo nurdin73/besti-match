@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import type { GameSummary } from '@/types/game.types'
-import { copyShareTextToClipboard, downloadBlob, formatShareText, renderResultCardToCanvas } from './share-card.utils'
+import { copyShareTextToClipboard, downloadBlob, formatShareText, renderResultCardToCanvas, shareResultCard } from './share-card.utils'
 
 const mockSummary: GameSummary = {
   compatibility: 80,
@@ -129,5 +129,31 @@ describe('share-card.utils', () => {
     expect(success).toBe(true)
     expect(written).toContain('Aldi')
     expect(written).toContain('https://bestie-match.web.app')
+  })
+
+  it('shareResultCard passes clean text and sets url without duplicating link in shareData.text', async () => {
+    let capturedShareData: ShareData | null = null
+    // @ts-expect-error test navigator mock
+    globalThis.navigator = {
+      canShare: (data: ShareData) => Boolean(data),
+      share: async (data: ShareData) => {
+        capturedShareData = data
+      },
+    }
+
+    const blob = new Blob(['image-content'], { type: 'image/png' })
+    const shared = await shareResultCard(
+      blob,
+      'Hasil BestieMatch',
+      'Tingkat kecocokan kami 80%!',
+      'https://bestie-match.web.app',
+    )
+
+    expect(shared).toBe(true)
+    expect(capturedShareData).not.toBeNull()
+    expect(capturedShareData?.text).toBe('Tingkat kecocokan kami 80%!')
+    expect(capturedShareData?.text).not.toContain('https://bestie-match.web.app')
+    expect(capturedShareData?.url).toBe('https://bestie-match.web.app')
+    expect(capturedShareData?.files?.length).toBe(1)
   })
 })

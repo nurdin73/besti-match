@@ -287,7 +287,7 @@ export async function shareResultCard(
   const file = new File([blob], 'bestie-match-result.png', { type: 'image/png' })
   const shareData: ShareData = {
     title,
-    text: url ? `${text}\n\nMainkan di: ${url}` : text,
+    text,
     files: [file],
   }
   if (url) {
@@ -302,5 +302,23 @@ export async function shareResultCard(
       return false
     }
   }
+
+  // Fallback for browsers that do not support files + url simultaneously in canShare
+  if (url && typeof navigator !== 'undefined' && navigator.canShare) {
+    const fallbackData: ShareData = {
+      title,
+      text: `${text}\n\nMainkan di: ${url}`,
+      files: [file],
+    }
+    if (navigator.canShare(fallbackData)) {
+      try {
+        await navigator.share(fallbackData)
+        return true
+      } catch {
+        return false
+      }
+    }
+  }
+
   return false
 }
