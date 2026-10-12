@@ -39,6 +39,14 @@ function submitDraft(): void {
   draft.value = ''
 }
 
+function formatTemplateSegments(template: string): { text: string; isTarget: boolean }[] {
+  const parts = template.split(/(\{target\})/g)
+  return parts.filter(Boolean).map((part) => ({
+    text: part,
+    isTarget: part === '{target}',
+  }))
+}
+
 const pill = (active: boolean) =>
   active ? 'border-tangerine bg-tangerine text-white shadow-[0_3px_0_0_#d9502f]' : 'border-line bg-white text-ink hover:border-tangerine'
 </script>
@@ -97,7 +105,18 @@ const pill = (active: boolean) =>
       </form>
       <ul class="flex flex-col gap-2">
         <li v-for="q in settings.customQuestions" :key="q.id" class="flex items-center justify-between gap-2 rounded-2xl bg-cream px-4 py-2 text-sm animate-pop-in">
-          <span>{{ q.template }}</span>
+          <span class="break-words">
+            <template v-for="(seg, i) in formatTemplateSegments(q.template)" :key="i">
+              <span
+                v-if="seg.isTarget"
+                class="rounded-md bg-tangerine/15 px-1.5 py-0.5 font-mono text-xs font-bold text-tangerine"
+                data-testid="host-setup-custom-target-tag"
+              >
+                {target}
+              </span>
+              <template v-else>{{ seg.text }}</template>
+            </template>
+          </span>
           <button v-if="editable" class="text-stone-400 hover:text-miss" :aria-label="`Hapus soal ${q.template}`" :data-testid="`host-setup-custom-remove-${q.id}`" @click="emit('removeQuestion', q.id)">✕</button>
         </li>
       </ul>
